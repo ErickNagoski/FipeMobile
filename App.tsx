@@ -3,34 +3,44 @@ import React, { useState } from 'react';
 import { StyleSheet, Platform, Text, View, SafeAreaView, Button } from 'react-native';
 import { Picker } from "@react-native-picker/picker";
 
-import api from "./api";
+import api from "./src/services/api";
+import { useEffect } from 'react';
 
 
 
 export default function App() {
+  
+  
+  
+  
+  interface BrandsProps {
+    nome: string;
+    codigo: string;
+  }
+  
   const [vehicles, setVehicles] = useState(["Carros", "Motos", "Caminhões"]);
   const [vehicleSelected, setVehicleSelected] = useState<string>();
 
-  const [brands, setBrands] = useState(["mercedes", "fiat", "jeep", "chevrolet", "honda"]);
+  const [brands, setBrands] = useState<BrandsProps[]>([]);
   const [brandSelected, setBrandSelected] = useState<string>();
 
   const [models, setModels] = useState(["gol", "uno", "palio", "corsa", "saveiro", "fox"]);
   const [modelSelected, setModelSelected] = useState<string>();
 
-  const [years, setYears] = useState(["2002", "2003", "2005", "2006", "2009", "20010", "2020"]);
+  const [years, setYears] = useState(["2002", "2003", "2005", "2006", "2009", "2010", "2020"]);
   const [yearSelected, setYearSelected] = useState<string>();
 
-  interface BrandsProps {
-    nome: string;
-    codigo: string;
-  }
-
-
   async function loadBrands() {
-    await api.get(`${vehicleSelected}/marcas`).then(function (response) {
-      console.log(response)
-    })
+    api.get(`/${vehicleSelected}/marcas`).then((response)=>{
+    //console.log(response.data)
+    setBrands(response.data);
+    });
   }
+
+  useEffect(()=>{
+    //console.log("useEffect")
+    loadBrands();
+  },[vehicleSelected])
 
   return (
 
@@ -47,11 +57,12 @@ export default function App() {
           selectedValue={vehicleSelected}
           style={styles.vehiclePicker}
           onValueChange={(itemValue) =>
-            setVehicleSelected(itemValue)
-          }>
+            setVehicleSelected(itemValue)}
+           
+            >
           {
-            vehicles.map(vh => {
-              return <Picker.Item label={vh} value={vh} />
+            vehicles.map(item => {
+              return <Picker.Item label={item} value={item} />
             })
           }
         </Picker>
@@ -61,15 +72,16 @@ export default function App() {
 
       <View style={styles.selectContainer}>
         <Picker
-          selectedValue={vehicleSelected}
+          selectedValue={brandSelected}
           style={styles.picker}
           onValueChange={(itemValue) =>
             setBrandSelected(itemValue)
           }>
           {
-            brands.map(vh => {
-              return <Picker.Item label={vh} value={vh} />
+            brands.map(item => {
+              return <Picker.Item label={item.nome} value={item.nome} />
             })
+          
           }
         </Picker>
         <Picker
@@ -99,7 +111,7 @@ export default function App() {
       </View>
       <Button
         title={"Cadastrar planta"}
-        onPress={loadBrands}
+        onPress={()=>{console.log(models)}}
       />
 
       <StatusBar style="auto" />
