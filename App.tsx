@@ -9,38 +9,106 @@ import { useEffect } from 'react';
 
 
 export default function App() {
-  
-  
-  
-  
+
+
+
+
   interface BrandsProps {
     nome: string;
     codigo: string;
   }
-  
-  const [vehicles, setVehicles] = useState(["Carros", "Motos", "Caminhões"]);
-  const [vehicleSelected, setVehicleSelected] = useState<string>();
+
+  interface ModelsProps {
+    nome: string;
+    codigo: string;
+  }
+
+  interface YearProps {
+    nome: string;
+    codigo: string;
+  }
+
+  interface PriceProps {
+    "Valor": string;
+    "Marca": string;
+    "Modelo": string;
+    "AnoModelo": string;
+    "Combustivel": string;
+    "CodigoFipe": string;
+    "MesReferencia": string;
+    "TipoVeiculo": string;
+    "SiglaCombustivel": string;
+  }
+
+  const [vehicles, setVehicles] = useState(["Selecione", "carros", "motos", "caminhões"]);
+  const [vehicleSelected, setVehicleSelected] = useState<string>("Selecione");
 
   const [brands, setBrands] = useState<BrandsProps[]>([]);
-  const [brandSelected, setBrandSelected] = useState<string>();
+  const [brandSelected, setBrandSelected] = useState<string>("");
 
-  const [models, setModels] = useState(["gol", "uno", "palio", "corsa", "saveiro", "fox"]);
-  const [modelSelected, setModelSelected] = useState<string>();
+  const [models, setModels] = useState<ModelsProps[]>([]);
+  const [modelSelected, setModelSelected] = useState<string>("");
 
-  const [years, setYears] = useState(["2002", "2003", "2005", "2006", "2009", "2010", "2020"]);
-  const [yearSelected, setYearSelected] = useState<string>();
+  const [years, setYears] = useState<YearProps[]>([]);
+  const [yearSelected, setYearSelected] = useState<string>("");
+
+  const [price, setPrice] = useState<PriceProps[]>([]);
 
   async function loadBrands() {
-    api.get(`/${vehicleSelected}/marcas`).then((response)=>{
-    //console.log(response.data)
-    setBrands(response.data);
+    api.get(`/${vehicleSelected}/marcas`).then((response) => {
+      setBrands(response.data);
     });
   }
 
-  useEffect(()=>{
-    //console.log("useEffect")
-    loadBrands();
-  },[vehicleSelected])
+  async function loadModels() {
+    api.get(`/${vehicleSelected}/marcas/${brandSelected}/modelos`).then((response => {
+      const dados = response.data;
+      setModels(dados["modelos"]);
+    }
+    ))
+  }
+
+  async function loadYears() {
+    api.get(`/${vehicleSelected}/marcas/${brandSelected}/modelos/${modelSelected}/anos`).then((response => {
+      setYears(response.data);
+      console.log(response.data)
+    }
+    ))
+  }
+
+  async function loadPrice() {
+    console.log(`/${vehicleSelected}/marcas/${brandSelected}/modelos/${modelSelected}/anos/${yearSelected}`)
+    api.get(`/${vehicleSelected}/marcas/${brandSelected}/modelos/${modelSelected}/anos/${yearSelected}`).then(response => {
+     console.log(response.data);
+    })
+
+  }
+
+  useEffect(() => {
+
+    if (vehicleSelected !== "Selecione") {
+      console.log("useEffect")
+      loadBrands();
+    } else {
+      setModels([]);
+      setBrands([]);
+      setYears([]);
+    }
+  }, [vehicleSelected])
+
+  useEffect(() => {
+    if (brandSelected !== "") {
+      console.log("useEffect")
+      loadModels();
+    }
+  }, [brandSelected])
+
+  useEffect(() => {
+    if (modelSelected !== "") {
+      loadYears();
+    }
+  }, [modelSelected])
+
 
   return (
 
@@ -58,8 +126,8 @@ export default function App() {
           style={styles.vehiclePicker}
           onValueChange={(itemValue) =>
             setVehicleSelected(itemValue)}
-           
-            >
+
+        >
           {
             vehicles.map(item => {
               return <Picker.Item label={item} value={item} />
@@ -71,6 +139,7 @@ export default function App() {
       </View>
 
       <View style={styles.selectContainer}>
+        {/* brandsPicker */}
         <Picker
           selectedValue={brandSelected}
           style={styles.picker}
@@ -79,39 +148,43 @@ export default function App() {
           }>
           {
             brands.map(item => {
-              return <Picker.Item label={item.nome} value={item.nome} />
+              return <Picker.Item label={item.nome} value={item.codigo} />
             })
-          
+
           }
         </Picker>
+        {/* modelsPicker */}
         <Picker
-          selectedValue={vehicleSelected}
+          enabled={!!brandSelected}
+          selectedValue={modelSelected}
           style={styles.picker}
           onValueChange={(itemValue) =>
             setModelSelected(itemValue)
           }>
           {
-            models.map(vh => {
-              return <Picker.Item label={vh} value={vh} />
+            models.map(item => {
+              return <Picker.Item label={item.nome} value={item.codigo} />
             })
           }
         </Picker>
+        {/* yearsPicker */}
         <Picker
-          selectedValue={vehicleSelected}
+          enabled={!!modelSelected}
+          selectedValue={yearSelected}
           style={styles.picker}
           onValueChange={(itemValue) =>
             setYearSelected(itemValue)
           }>
           {
-            years.map(vh => {
-              return <Picker.Item label={vh} value={vh} />
+            years.map(item => {
+              return <Picker.Item label={item.nome} value={item.codigo} />
             })
           }
         </Picker>
       </View>
       <Button
         title={"Cadastrar planta"}
-        onPress={()=>{console.log(models)}}
+        onPress={() => { loadPrice() }}
       />
 
       <StatusBar style="auto" />
