@@ -1,17 +1,12 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { StyleSheet, Platform, Text, View, SafeAreaView, Button } from 'react-native';
+import { StyleSheet, Platform, Text, View, SafeAreaView, Button, FlatList, Alert, ActivityIndicator, Touchable, TouchableOpacity } from 'react-native';
 import { Picker } from "@react-native-picker/picker";
 
 import api from "./src/services/api";
 import { useEffect } from 'react';
 
-
-
 export default function App() {
-
-
-
 
   interface BrandsProps {
     nome: string;
@@ -54,182 +49,243 @@ export default function App() {
 
   const [price, setPrice] = useState<PriceProps[]>([]);
 
+  const [query, setQuery] = useState<string>("");
+
+  const [loading, setLoading] = useState(false);
+
+
   async function loadBrands() {
-    api.get(`/${vehicleSelected}/marcas`).then((response) => {
+    await api.get(`/${vehicleSelected}/marcas`).then((response) => {
       setBrands(response.data);
+      setLoading(false);
     });
   }
 
   async function loadModels() {
-    api.get(`/${vehicleSelected}/marcas/${brandSelected}/modelos`).then((response => {
+    await api.get(`/${vehicleSelected}/marcas/${brandSelected}/modelos`).then((response => {
       const dados = response.data;
       setModels(dados["modelos"]);
+      setLoading(false);
     }
     ))
   }
 
   async function loadYears() {
-    api.get(`/${vehicleSelected}/marcas/${brandSelected}/modelos/${modelSelected}/anos`).then((response => {
+    await api.get(`/${vehicleSelected}/marcas/${brandSelected}/modelos/${modelSelected}/anos`).then((response => {
       setYears(response.data);
-      console.log(response.data)
+      setLoading(false);
     }
     ))
   }
 
   async function loadPrice() {
-    console.log(`/${vehicleSelected}/marcas/${brandSelected}/modelos/${modelSelected}/anos/${yearSelected}`)
-    api.get(`/${vehicleSelected}/marcas/${brandSelected}/modelos/${modelSelected}/anos/${yearSelected}`).then(response => {
-     console.log(response.data);
-    })
+    await api.get(query).then(response => {
+      setPrice(response.data);
+      setLoading(false);
+    }).catch(function (error) {
+      Alert.alert("Erro na consulta");
+      setLoading(false)
+    });
 
   }
 
   useEffect(() => {
+    setQuery(`/${vehicleSelected}/marcas/${brandSelected}/modelos/${modelSelected}/anos/${yearSelected}`);
+  });
+
+  useEffect(() => {
 
     if (vehicleSelected !== "Selecione") {
-      console.log("useEffect")
+      setLoading(true);
       loadBrands();
     } else {
-      setModels([]);
       setBrands([]);
+      setModels([]);
       setYears([]);
     }
   }, [vehicleSelected])
 
   useEffect(() => {
     if (brandSelected !== "") {
-      console.log("useEffect")
+      setLoading(true);
       loadModels();
+      setModelSelected("");
+      setYearSelected("");
     }
   }, [brandSelected])
 
   useEffect(() => {
     if (modelSelected !== "") {
+      setLoading(true);
       loadYears();
+      setYearSelected("");
     }
   }, [modelSelected])
 
+  useEffect(() => {
+  }, [yearSelected])
 
-  return (
-
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>FipeMobile</Text>
-      </View>
-
-
-
-      <View style={styles.content}>
-        <Text style={styles.title}>Selecione o tipo de veículo para a consulta</Text>
-        <Picker
-          selectedValue={vehicleSelected}
-          style={styles.vehiclePicker}
-          onValueChange={(itemValue) =>
-            setVehicleSelected(itemValue)}
-
-        >
-          {
-            vehicles.map(item => {
-              return <Picker.Item label={item} value={item} />
-            })
-          }
-        </Picker>
-
-
-      </View>
-
-      <View style={styles.selectContainer}>
-        {/* brandsPicker */}
-        <Picker
-          selectedValue={brandSelected}
-          style={styles.picker}
-          onValueChange={(itemValue) =>
-            setBrandSelected(itemValue)
-          }>
-          {
-            brands.map(item => {
-              return <Picker.Item label={item.nome} value={item.codigo} />
-            })
-
-          }
-        </Picker>
-        {/* modelsPicker */}
-        <Picker
-          enabled={!!brandSelected}
-          selectedValue={modelSelected}
-          style={styles.picker}
-          onValueChange={(itemValue) =>
-            setModelSelected(itemValue)
-          }>
-          {
-            models.map(item => {
-              return <Picker.Item label={item.nome} value={item.codigo} />
-            })
-          }
-        </Picker>
-        {/* yearsPicker */}
-        <Picker
-          enabled={!!modelSelected}
-          selectedValue={yearSelected}
-          style={styles.picker}
-          onValueChange={(itemValue) =>
-            setYearSelected(itemValue)
-          }>
-          {
-            years.map(item => {
-              return <Picker.Item label={item.nome} value={item.codigo} />
-            })
-          }
-        </Picker>
-      </View>
-      <Button
-        title={"Cadastrar planta"}
-        onPress={() => { loadPrice() }}
+  if (loading) {
+    return <View style={styles.containerLoading}>
+      <ActivityIndicator
+        size="large"
+        color="#02b7f2"
       />
+      <Text>Aguarde...</Text>
+    </View>
+  } else {
+    return (
 
-      <StatusBar style="auto" />
-    </SafeAreaView>
-  );
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerText}>FipeMobile</Text>
+          </View>
+        </View>
+
+        <View style={styles.content}>
+          <Text style={styles.title}>Selecione o tipo de veículo para a consulta</Text>
+          <Picker
+            selectedValue={vehicleSelected}
+            style={styles.vehiclePicker}
+            onValueChange={(itemValue) =>
+              setVehicleSelected(itemValue)}>
+            {
+              vehicles.map((item, index) => {
+                return <Picker.Item key={index} label={item} value={item} />
+              })
+            }
+          </Picker>
+
+
+        </View>
+        <View style={styles.labelPickerView}>
+          
+          <Text style={styles.pickerLabel}>Marca</Text>
+          <Text style={styles.pickerLabel}>Modelo</Text>
+          <Text style={styles.pickerLabel}>Ano</Text>
+       
+        </View>
+        <View style={styles.selectContainer}>
+          
+          {/* brandsPicker */}
+          <Picker
+            selectedValue={brandSelected}
+            style={styles.picker}
+            onValueChange={(itemValue) =>
+              setBrandSelected(itemValue)
+            }>
+            {
+              brands.map((item) => {
+                return <Picker.Item key={item.codigo} label={item.nome} value={item.codigo} />
+              })
+            }
+          </Picker>
+          
+          {/* modelsPicker */}
+          <Picker
+            enabled={brandSelected != ""}
+            selectedValue={modelSelected}
+            style={styles.picker}
+            onValueChange={(itemValue) =>
+              setModelSelected(itemValue)
+            }>
+            {
+              models.map(item => {
+                return <Picker.Item key={item.codigo} label={item.nome} value={item.codigo} />
+              })
+            }
+          </Picker>
+        
+          {/* yearsPicker */}
+          <Picker
+            enabled={modelSelected != ""}
+            selectedValue={yearSelected}
+            style={styles.picker}
+            onValueChange={(itemValue) => {
+              setYearSelected(itemValue)
+            }
+            }>
+            {
+              years.map(item => {
+                return <Picker.Item key={item.codigo} label={item.nome} value={item.codigo} />
+              })
+            }
+          </Picker>
+        
+        </View>
+        
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => {
+              setQuery(`/${vehicleSelected}/marcas/${brandSelected}/modelos/${modelSelected}/anos/${yearSelected}`);
+              setLoading(true);
+              loadPrice()
+            }}>
+            <Text style={styles.textButton}>Consultar</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.listbody}>
+          {
+            Object.entries(price).map(item => {
+              return <Text style={styles.listItem}>{item[0]} -- {item[1]}</Text>
+            })
+          }
+        </View>
+
+        <StatusBar style="auto" />
+      </SafeAreaView>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#FFFF",
-    paddingTop: Platform.OS === "android" ? 25 : 0,
+    paddingTop: Platform.OS === "android" ? 35 : 0,
   },
   container: {
     flex: 1,
     backgroundColor: '#fff',
-
-
   },
   header: {
     height: 50,
-    backgroundColor: "#02b7f2",
     display: "flex",
     alignItems: "center"
+  },
+  headerTextContainer: {
+    width: 300,
+    backgroundColor: "#02b7f2",
+    borderRadius: 20,
+    display: 'flex',
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerText: {
     fontSize: 32,
     color: "white",
     fontWeight: "bold",
   },
-
   content: {
     padding: 15,
-
   },
   title: {
     fontSize: 18,
     fontWeight: '600',
-
   },
   vehiclePicker: {
     height: 50,
     width: 200,
-    borderWidth: 2,
-    borderColor: "#02b7f2",
+  },
+  labelPickerView: {
+    marginHorizontal: 10,
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-around",
   },
   picker: {
     height: 50,
@@ -238,10 +294,51 @@ const styles = StyleSheet.create({
     borderColor: "#02b7f2",
   },
 
+  pickerLabel: {
+    fontSize: 15,
+  },
+
   selectContainer: {
-    backgroundColor: "red",
     display: "flex",
     flexDirection: 'row',
     paddingHorizontal: 15,
+    alignContent: "space-between"
+  },
+
+  buttonContainer: {
+    display: "flex",
+    alignItems: "center",
+    marginVertical: 10
+  },
+  button: {
+    backgroundColor: "#02b7f2",
+    padding: 5,
+    width: 200,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  textButton: {
+    fontSize: 20,
+    color: "white",
+    fontWeight: "700",
+  },
+  listbody: {
+    marginHorizontal: 15,
+    paddingHorizontal: 15,
+    borderWidth: 2,
+    borderColor: "#02b7f2",
+  },
+  listItem: {
+    fontSize: 16,
+    marginBottom: 5,
+    borderColor: "rgb(230,230,230)"
+  },
+  containerLoading: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "white"
   }
+
 });
