@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { StyleSheet, Platform, Text, View, SafeAreaView, Button, FlatList, Alert, ActivityIndicator, Touchable, TouchableOpacity } from 'react-native';
+import { StyleSheet, Platform, Text, View, SafeAreaView, Alert, ActivityIndicator,  TouchableOpacity} from 'react-native';
 import { Picker } from "@react-native-picker/picker";
 
 import api from "./src/services/api";
@@ -53,7 +53,6 @@ export default function App() {
 
   const [loading, setLoading] = useState(false);
 
-
   async function loadBrands() {
     await api.get(`/${vehicleSelected}/marcas`).then((response) => {
       setBrands(response.data);
@@ -84,9 +83,7 @@ export default function App() {
       setLoading(false);
     }).catch(function (error) {
       Alert.alert("Erro na consulta");
-      setLoading(false)
-    });
-
+      setLoading(false)});
   }
 
   useEffect(() => {
@@ -157,17 +154,16 @@ export default function App() {
             }
           </Picker>
 
-
         </View>
         <View style={styles.labelPickerView}>
-          
+
           <Text style={styles.pickerLabel}>Marca</Text>
           <Text style={styles.pickerLabel}>Modelo</Text>
           <Text style={styles.pickerLabel}>Ano</Text>
-       
+
         </View>
         <View style={styles.selectContainer}>
-          
+
           {/* brandsPicker */}
           <Picker
             selectedValue={brandSelected}
@@ -181,7 +177,7 @@ export default function App() {
               })
             }
           </Picker>
-          
+
           {/* modelsPicker */}
           <Picker
             enabled={brandSelected != ""}
@@ -196,7 +192,7 @@ export default function App() {
               })
             }
           </Picker>
-        
+
           {/* yearsPicker */}
           <Picker
             enabled={modelSelected != ""}
@@ -212,9 +208,9 @@ export default function App() {
               })
             }
           </Picker>
-        
+
         </View>
-        
+
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
@@ -225,6 +221,16 @@ export default function App() {
             }}>
             <Text style={styles.textButton}>Consultar</Text>
           </TouchableOpacity>
+{/* 
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => {
+              pesquisa(modelSelected)
+            }}>
+            <Text style={styles.textButton}>Teste image</Text>
+          </TouchableOpacity> */}
+
         </View>
 
         <View style={styles.listbody}>
@@ -242,6 +248,7 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+
   safeArea: {
     flex: 1,
     backgroundColor: "#FFFF",
@@ -340,5 +347,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "white"
   }
+
 
 });
