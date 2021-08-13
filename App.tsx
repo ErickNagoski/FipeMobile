@@ -214,7 +214,7 @@ export default function App() {
           </Picker>
         
         </View>
-        
+        {/* <Text>{query}</Text> */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
